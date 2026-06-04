@@ -134,6 +134,14 @@ impl TernaryMap {
 
 /// Estimate the Lyapunov exponent for a ternary map.
 /// Uses perturbation sensitivity: track how small differences grow.
+///
+/// **Known limitation:** Because ternary rules immediately quantize through
+/// `Ternary::from_f64`, a perturbation of 0.001 is destroyed in the first
+/// iteration (e.g. `from_f64(1.0)` and `from_f64(1.001)` both yield `Pos`).
+/// This means the returned exponent is always effectively zero for any rule
+/// that ternarizes — the function cannot measure true chaos in discrete
+/// ternary dynamics. It is retained as a structural placeholder for future
+/// continuous-valued extensions.
 pub fn estimate_lyapunov<F>(rule: F, initial: Ternary, param: f64, iterations: usize) -> f64
 where
     F: Fn(Ternary, f64) -> Ternary,
