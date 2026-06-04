@@ -105,15 +105,10 @@ Part of the **SuperInstance** ternary computing ecosystem:
 
 ## Known Limitations
 
-- **`estimate_lyapunov()` is numerically meaningless for ternary dynamics.** The perturbation of 0.001 is destroyed by ternarization in the first iteration (`from_f64(1.0)` and `from_f64(1.001)` both yield `Pos`). The returned exponent is always effectively zero. This function exists as a structural placeholder and should not be used to draw conclusions about chaos in ternary systems.
-- **`detect_period()` can return false positives.** It only checks the last `2*period` values for repetition, not the full orbit. A coincidental tail match may report a shorter period than the true one.
+- **`estimate_lyapunov()` is numerically meaningless for ternary dynamics**: The perturbation of 0.001 is destroyed by ternarization in the first iteration (`from_f64(1.0)` and `from_f64(1.001)` both yield `Pos`). The returned exponent is always effectively zero. This function exists as a structural placeholder and should not be used to draw conclusions about chaos in ternary systems.
+- **`detect_period()` can return false positives**: It only checks the last `2*period` values for repetition, not the full orbit. A coincidental tail match may report a shorter period than the true one.
 - **`detect_strange_attractor()` uses a heuristic** (period is None AND unique_states ≥ 2). In a 3-state system this is not a meaningful definition of a strange attractor.
 - **`find_cycles()` may miss cycles** that start mid-trajectory — it only tests the three starting states.
-- **The default rule with param=0 collapses everything to Zero.** "Rich dynamics" only emerge at higher parameters.
-
-## Known Limitations
-
-- **Lyapunov estimation is numerically meaningless on ternary maps**: The Lyapunov exponent estimator tracks perturbation growth, but since ternary values are discretized to {-1, 0, +1} via `from_f64()` thresholds, two close floating-point values can collapse to the same ternary state, making the perturbation-based measurement fundamentally unreliable. The result should not be compared to Lyapunov exponents from continuous dynamical systems.
 - **Three-state limit**: All iterated maps produce sequences of only 3 values, so the richest possible dynamics are short-period cycles. True chaos in the mathematical sense is impossible.
 - **Coarse bifurcation detection**: Bifurcation detection only identifies period changes; it cannot distinguish between period doubling, intermittency, or other bifurcation types.
 - **Lossy ternarization**: The `from_f64()` step (thresholds at ±0.5) discards continuous information at every iteration, making it impossible to reconstruct the underlying continuous trajectory.
