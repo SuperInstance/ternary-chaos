@@ -113,6 +113,14 @@ Part of the **SuperInstance** ternary computing ecosystem:
 - **Coarse bifurcation detection**: Bifurcation detection only identifies period changes; it cannot distinguish between period doubling, intermittency, or other bifurcation types.
 - **Lossy ternarization**: The `from_f64()` step (thresholds at ±0.5) discards continuous information at every iteration, making it impossible to reconstruct the underlying continuous trajectory.
 
+## See Also
+
+- **ternary-dynamics** — Dynamical systems and state transitions in ternary spaces
+- **ternary-kuramoto** — Kuramoto-style synchronization of ternary oscillators
+- **ternary-entropy** — Entropy and information theory for ternary distributions
+- **ternary-ising** — Ising model simulations with ternary spin states
+- **ternary-thermodynamics** — Statistical mechanics analogs for ternary systems
+
 ## License
 
 MIT
