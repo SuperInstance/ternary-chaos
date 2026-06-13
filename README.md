@@ -1,86 +1,127 @@
-# ternary-chaos
+# Ternary Chaos
 
-**Chaos and nonlinear dynamics for ternary systems**
+**Ternary Chaos** provides chaos theory and nonlinear dynamics tools for ternary systems — iterated maps on {-1, 0, +1}, bifurcation detection, Lyapunov exponent estimation, strange attractor detection, sensitivity-to-initial-conditions analysis, and period detection.
 
-[![ternary](https://img.shields.io/badge/ecosystem-ternary-blue)](https://github.com/orgs/SuperInstance/repositories?q=ternary)
-[![tests](https://img.shields.io/badge/tests-21-green)]()
+## Why It Matters
 
-## Overview
+Ternary systems can exhibit chaotic behavior — small perturbations in initial conditions lead to dramatically different trajectories. Understanding chaos in ternary agent populations is critical for predicting fleet stability: will a small change in one agent's strategy cascade into fleet-wide reorganization, or will it damp out? Ternary Chaos provides the mathematical tools to answer this, measuring sensitivity (Lyapunov exponents), detecting periodic and chaotic regimes (bifurcation diagrams), and identifying attractor structures.
 
-Chaos and nonlinear dynamics for ternary systems.
+## How It Works
 
-Provides iterated maps on {-1, 0, +1}, bifurcation detection,
-Lyapunov exponent estimation, strange attractor detection in ternary space,
-sensitivity to initial conditions analysis, and period detection.
+### Iterated Maps on Ternary States
 
-## Architecture
-
-- **`TernaryMap`** — core data structure
-- **`StrangeAttractorResult`** — core data structure
-- **`Ternary`** — state enumeration
-
-### Key Functions
-
-- `value()`
-- `from_i8()`
-- `from_f64()`
-- `nonlinear_map()`
-- `new()`
-- `default_rule()`
-- `modulation_rule()`
-- `xor_rule()`
-- `iterate()`
-- `iterate_n()`
-- ... and 7 more
-
-## Why Ternary?
-
-The balanced ternary system {-1, 0, +1} (also known as Z₃) is the mathematically optimal discrete encoding:
-- **More expressive than binary**: three states capture positive, neutral, and negative
-- **Natural for decisions**: accept/reject/abstain, buy/hold/sell, agree/disagree/neutral
-- **Self-balancing**: the 0 state acts as a universal screen, preventing pathological lock-in
-- **Z₃ cyclic dynamics**: rock-paper-scissors is the only natural coordination mechanism
-
-## Stats
-
-| Metric | Value |
-|--------|-------|
-| Lines of Rust | 486 |
-| Test count | 21 |
-| Public types | 3 |
-| Public functions | 17 |
-
-## Ecosystem
-
-This crate is part of the **[SuperInstance Ternary Fleet](https://github.com/orgs/SuperInstance/repositories?q=ternary)**:
-
-- **[ternary-core](https://github.com/SuperInstance/ternary-core)** — shared traits and Z₃ arithmetic
-- **[ternary-grid](https://github.com/SuperInstance/ternary-grid)** — spatial grid with {-1, 0, +1} cells
-- **[ternary-graph](https://github.com/SuperInstance/ternary-graph)** — ternary-weighted graph algorithms
-- **[ternary-automata](https://github.com/SuperInstance/ternary-automata)** — three-state cellular automata
-- **[ternary-compiler](https://github.com/SuperInstance/ternary-compiler)** — expression compiler and optimizer
-
-200+ crates. 4,300+ tests. One pattern.
-
-## Research Context
-
-The ternary approach connects to several active research areas:
-- **Ternary Neural Networks** (TNNs): weights constrained to {-1, 0, +1} for efficient inference
-- **Huawei's ternary chip**: 7nm ternary silicon with 60% less power consumption
-- **Active inference**: free energy minimization naturally maps to ternary action selection
-- **Cyclic dominance**: RPS dynamics maintain biodiversity in spatial ecology
-- **Z₃ group theory**: the only algebraic group on three elements is cyclic addition mod 3
-
-## Usage
-
-```toml
-[dependencies]
-ternary-chaos = "0.1.0"
 ```
+TernaryMap {
+    rule: fn(Ternary, f64) -> Ternary,
+    state: Ternary,
+    param: f64,
+}
+
+step(): state = rule(state, param)
+```
+
+The nonlinear map applies a parameter-dependent transform then re-ternarizes:
+
+```
+v = state.value() × param
+new_state = ternarize(v)  // < -0.5 → Neg, > 0.5 → Pos, else Zero
+```
+
+### Lyapunov Exponent
+
+Measures sensitivity to initial conditions:
+
+```
+λ = lim(t→∞) (1/t) · Σ ln|f'(x_i)|
+
+λ > 0: chaotic (exponential divergence)
+λ = 0: neutral/marginal
+λ < 0: stable (exponential convergence)
+```
+
+Estimation: iterate two nearby initial conditions, measure separation rate. Cost: **O(N)** for N iterations.
+
+### Bifurcation Detection
+
+As parameter μ varies, the system may transition from fixed point → periodic → chaotic:
+
+```
+for μ in μ_min..μ_max:
+    iterate map 1000 times (transient)
+    record next 100 states (attractor)
+    classify: fixed point (1 unique), periodic (k unique), chaotic (>k unique)
+```
+
+Full bifurcation diagram: **O(M · N)** for M parameter values, N iterations each.
+
+### Period Detection
+
+Floyd's cycle detection on the ternary state sequence:
+
+```
+Phase 1: tortoise = f(x), hare = f(f(x)) — advance until equal
+Phase 2: find cycle length λ by counting steps until repeat
+```
+
+Cost: **O(μ + λ)** time, **O(1)** space.
+
+### Strange Attractor Detection
+
+A strange attractor has fractal dimension and aperiodic dynamics:
+
+```
+- Correlation dimension (Grassberger-Procaccia): O(N²) pairwise distances
+- Positive Lyapunov exponent: O(N) iteration
+- Recurrence plot structure: O(N²) threshold comparison
+```
+
+### Sensitivity Analysis
+
+```
+sensitivity(perturbation):
+    original = simulate(N steps)
+    perturbed = simulate(N steps, perturbed_initial)
+    divergence = ||original - perturbed||
+    return divergence trend (growing = sensitive, stable = robust)
+```
+
+Cost: **O(N)** per comparison.
+
+## Quick Start
 
 ```rust
-use ternary_chaos;
+use ternary_chaos::{TernaryMap, Ternary};
+
+let mut map = TernaryMap::new(|s, p| {
+    Ternary::from_f64(s.value() as f64 * p)
+}, Ternary::Zero, 1.5);
+
+for _ in 0..1000 { map.step(); }
+let history = map.history();
+println!("Period: {:?}", map.detect_period());
 ```
+
+## API
+
+| Type | Description |
+|------|-------------|
+| `TernaryMap` | Iterated map with rule, state, parameter, history |
+| `Ternary` | Neg (-1), Zero (0), Pos (+1) |
+| `lyapunov_exponent()` | Sensitivity to initial conditions |
+| `detect_period()` | Floyd's cycle detection |
+| `bifurcation_diagram()` | Parameter sweep with regime classification |
+
+## Architecture Notes
+
+Ternary Chaos provides the nonlinear dynamics analysis layer for fleet stability prediction in SuperInstance. In γ + η = C, chaotic regimes indicate that the conservation law itself may be unstable — small perturbations to γ or η can cause disproportionate changes to C. The Lyapunov exponent serves as an early warning: positive λ means the system is on the edge of chaos, and intervention (increasing η damping) may be needed.
+
+See [ARCHITECTURE.md](https://github.com/SuperInstance/SuperInstance/blob/main/ARCHITECTURE.md) for nonlinear dynamics architecture.
+
+## References
+
+1. Strogatz, S. H. (2018). *Nonlinear Dynamics and Chaos*, 2nd ed. Westview Press.
+2. Lorenz, E. N. (1963). "Deterministic Nonperiodic Flow." *Journal of the Atmospheric Sciences*, 20(2), 130–141.
+3. Grassberger, P. & Procaccia, I. (1983). "Measuring the Strangeness of Strange Attractors." *Physica D*, 9(1-2), 189–208.
 
 ## License
 
